@@ -1,67 +1,61 @@
-var puppeteer = require("puppeteer");
+const puppeteer = require('puppeteer');
 
 async function runScraper() {
   let browser = {};
   let page = {};
-  const url = "http://localhost:8080";
-  const selectors = {
-    header: ".display-3",
-    next: ".next"
-  };
+  const url = 'http://localhost:8080';
 
+  // open the page and wait
   async function navigate() {
     browser = await puppeteer.launch({ headless: false });
     page = await browser.newPage();
     await page.goto(url);
   }
 
-  async function getTargets() {
-    const next = await page.evaluateHandle(
-      (selectors, iframe) => {
-        return iframe.querySelector(selectors.next);
-      },
-      selectors,
-      iframe
-    );
+  async function scrapeData() {
+    const headerSel = 'h1';
+    // wait for element
+    await page.waitFor(headerSel);
+    return page.evaluate((selector) => {
+      const target = document.querySelector(selector);
 
-    const header = await page.evaluateHandle(
-      (selectors, iframe) => {
-        return iframe.querySelector(selectors.header);
-      },
-      selectors,
-      iframe
-    );
-    return { iframe, next, header };
-  }
-
-  async function scrapeData({ header }) {
-    return page.evaluate(target => {
+      // get the data
       const text = target.innerText;
+
+      // remove element so the waiting function works
       target.remove();
       return text;
-    }, header);
+    }, headerSel);
   }
 
-  async function paginate({ next }) {
-    await page.evaluate(target => {
-      target.click();
-    }, next);
+  // this is a sample concept of pagination
+  // it will vary from page to page because not all site have same type of pagination
+
+  async function paginate() {
+    // manually check if the next button is available or not
+    const nextBtnDisabled = !!(await page.$('.next.disabled'));
+    if (!nextBtnDisabled) {
+      // since it's not disable, click it
+      await page.evaluate(() => document.querySelector('.next').click());
+
+      // just some random waiting function
+      await page.waitFor(100);
+      return true;
+    }
+    return { nextBtnDisabled };
   }
 
-  async function loop() {
-    const targets = await getTargets();
-    const title = await scrapeData(targets);
-    await page.waitFor(5000);
-    await paginate(targets);
-    return title;
-  }
-
+  /**
+   * Scraping Logic
+   */
   await navigate();
-  const page1 = await loop();
-  console.log({ page1 });
-  const page2 = await loop();
-  const page3 = await loop();
-  console.log(page1, page2, page3);
+
+  // Scrape 5 pages
+  for (const pageNum of [...Array(5).keys()]) {
+    const title = await scrapeData();
+    console.log(pageNum + 1, title);
+    await paginate();
+  }
 }
 
 runScraper();
