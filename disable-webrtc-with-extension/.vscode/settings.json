@@ -1,0 +1,13 @@
+{
+  "prettier.eslintIntegration": true,
+  "javascript.updateImportsOnFileMove.enabled": "always",
+  "breadcrumbs.enabled": true,
+  "emmet.includeLanguages": {
+    "vue-html": "html",
+    "javascript": "javascriptreact"
+  },
+  "editor.fontSize": 20,
+  "editor.multiCursorModifier": "ctrlCmd",
+  "eslint.autoFixOnSave": true,
+  "editor.fontFamily": "'IBM Plex Mono', 'Droid Sans Mono', 'monospace', monospace, 'Droid Sans Fallback'"
+}
